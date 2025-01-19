@@ -301,10 +301,10 @@
         <div class="gacha">
             <div class="wheel-container">
                 <div class="wheel" id="wheel">
-                    <img src="https://static.wikia.nocookie.net/pokemon/images/e/ee/Master_Ball.png/revision/latest?cb=20241007214947" alt="Master Ball">
-                    <img src="https://static.wikia.nocookie.net/pokemon/images/3/34/Ultra_Ball.png/revision/latest?cb=20240730031101" alt="Ultra Ball">
-                    <img src="https://static.wikia.nocookie.net/pokemon/images/4/45/Great_Ball.png/revision/latest?cb=20240611003335" alt="Great Ball">
-                    <img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">
+                    <img src="images/masterball.png" alt="Master Ball">
+                    <img src="images/ultraball.png" alt="Ultra Ball">
+                    <img src="images/greatball.png" alt="Great Ball">
+                    <img src="images/pokeball.png" alt="Pokeball">
                 </div>
             </div>
             <button class="gacha-button" onclick="stopGacha()">Stop Wheel</button>
@@ -541,7 +541,7 @@
             const pokeballsDiv = document.getElementById(`${trainer}-pokeballs`);
             pokeballsDiv.innerHTML = "";
             for (let i = 0; i < remaining; i++) {
-                pokeballsDiv.innerHTML += '<img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">';
+                pokeballsDiv.innerHTML += '<img src="images/pokeball.png" alt="Pokeball">';
             }
         }
 
@@ -591,10 +591,10 @@
             wheel.style.transform = `rotate(${angle}deg)`;
 
             const ballOptions = [
-                { name: "Pokeball", img: "https://pngimg.com/uploads/pokeball/pokeball_PNG7.png", catchRate: 0.5 },
-                { name: "Great Ball", img: "https://static.wikia.nocookie.net/pokemon/images/4/45/Great_Ball.png/revision/latest?cb=20240611003335", catchRate: 0.7 },
-                { name: "Ultra Ball", img: "https://static.wikia.nocookie.net/pokemon/images/3/34/Ultra_Ball.png/revision/latest?cb=20240730031101", catchRate: 0.8 },
-                { name: "Master Ball", img: "https://static.wikia.nocookie.net/pokemon/images/e/ee/Master_Ball.png/revision/latest?cb=20241007214947", catchRate: 1.0 }
+                { name: "Pokeball", img: "images/pokeball.png", catchRate: 0.5 },
+                { name: "Great Ball", img: "images/greatball.png", catchRate: 0.7 },
+                { name: "Ultra Ball", img: "images/ultraball.png", catchRate: 0.8 },
+                { name: "Master Ball", img: "images/masterball.png", catchRate: 1.0 }
             ];
 
             const segmentSize = 360 / ballOptions.length;
