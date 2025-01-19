@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Battle: Ash vs Team Rocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+        .pokemon-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 5px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            padding: 5px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .pokemon-button img {
+            width: 75px;
+            height: 75px;
+        }
+
+        .pokemon-button.selected {
+            border-color: green;
+        }
+        .battle-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px;
+        }
+        .trainer {
+            text-align: center;
+            width: 20%;
+        }
+        .trainer img {
+            width: 100px;
+            height: auto;
+        }
+        .pokemon img {
+            width: 150px;
+            height: 150px;
+        }
+        .pokemon {
+            text-align: center;
+            width: 30%;
+            margin: 0 auto; /* Ensures the entire container is centered */
+        }
+
+        .hp-bar {
+            width: 150px;
+            height: 20px;
+            background-color: #ddd;
+            margin: 10px auto 0; /* Center the bar and add spacing below the image */
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .hp-bar div {
+            height: 100%;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            border-radius: 5px;
+        }
+        .actions {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .log p {
+            margin: 5px 0;
+        }
+        .gacha-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            z-index: 1000;
+        }
+        .gacha {
+            display: inline-block;
+            margin-top: 50px;
+            position: relative;
+        }
+        .wheel {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            border: 10px solid #ccc;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
+            transform-origin: center;
+        }
+
+        .wheel img {
+            position: absolute;
+            width: 75px;
+            height: 75px;
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            transform-origin: center center; /* Ensure rotation from the image's center */
+            transform: translate(-50%, -50%) rotate(0deg) translate(120px); /* Align on the circle edge */
+        }
+
+        .wheel img:nth-child(1) {
+            transform: translate(-50%, -50%) rotate(0deg) translate(120px) rotate(90deg);
+        }
+
+        .wheel img:nth-child(2) {
+            transform: translate(-50%, -50%) rotate(90deg) translate(120px) rotate(90deg);
+        }
+
+        .wheel img:nth-child(3) {
+            transform: translate(-50%, -50%) rotate(180deg) translate(120px) rotate(90deg);
+        }
+
+        .wheel img:nth-child(4) {
+            transform: translate(-50%, -50%) rotate(270deg) translate(120px) rotate(90deg);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .wheel.stopped {
+            animation-play-state: paused;
+        }
+
+        .catch-animation {
+            display: none; /* Hidden by default */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            flex-direction: column; /* Stack elements vertically */
+            position: fixed; /* Position relative to the viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Optional: dim the background */
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .catch-animation img {
+            width: 100px;
+            height: auto;
+            animation: roll 0.7s ease-in-out 3; /* Rolling animation */
+            animation-fill-mode: forwards; /* Ensure animation stops at the last frame */
+            margin-bottom: 20px; /* Space between ball and text */
+        }
+
+        .catch-animation p {
+            color: white; /* Text color */
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .catch-success {
+            animation: glow 1.5s ease-in-out;
+        }
+
+        .breakout {
+            animation: breakout 0.8s ease-in-out;
+        }
+
+        @keyframes roll {
+            0% {
+                transform: translateX(0) rotate(0deg);
+            }
+            25% {
+                transform: translateX(-10px) rotate(-15deg);
+            }
+            50% {
+                transform: translateX(10px) rotate(15deg);
+            }
+            75% {
+                transform: translateX(-5px) rotate(-10deg);
+            }
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px rgba(255, 223, 0, 0.6);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 223, 0, 1);
+                transform: scale(1.2);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(255, 223, 0, 0.6);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes breakout {
+            0% {
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(0.9) rotate(-10deg);
+            }
+            50% {
+                transform: scale(1.1) rotate(10deg);
+            }
+            75% {
+                transform: scale(0.95) rotate(-5deg);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Pokemon Battle: Ash vs Team Rocket</h1>
+
+    <div class="battle-area">
+        <div class="trainer">
+            <h3>Ash</h3>
+            <img src="https://upload.wikimedia.org/wikipedia/en/e/e4/Ash_Ketchum_Journeys.png" alt="Ash">
+        </div>
+
+        <div class="pokemon" id="ash">
+            <h3 id="ash-name">Ash's Pokemon</h3>
+            <img id="ash-img" src="" alt="">
+            <div class="hp-bar">
+                <div id="ash-hp" style="width: 100%; background-color: green;">HP</div>
+            </div>
+        </div>
+
+        <div class="pokemon" id="team-rocket">
+            <h3 id="rocket-name">Team Rocket's Pokemon</h3>
+            <img id="rocket-img" src="" alt="">
+            <div class="hp-bar">
+                <div id="rocket-hp" style="width: 100%; background-color: green;">HP</div>
+            </div>
+        </div>
+
+        <div class="trainer">
+            <h3>Team Rocket</h3>
+            <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/2c62c2fa-f93c-4eb3-be2a-21a0e5af6107/d6q4m5z-1ed333dd-c79b-473b-9f9c-df930eb1d0c3.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzJjNjJjMmZhLWY5M2MtNGViMy1iZTJhLTIxYTBlNWFmNjEwN1wvZDZxNG01ei0xZWQzMzNkZC1jNzliLTQ3M2ItOWY5Yy1kZjkzMGViMWQwYzMucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.Wq_3vCPm-RtMiWE7swPfNegQgl3WgaR7TIvFCTlWtp0" alt="Team Rocket">
+        </div>
+    </div>
+
+    <div class="actions">
+        <button onclick="playerAttack()" disabled id="attack-btn">Attack!</button>
+        <button onclick="resetGame()" id="reset-btn" style="display: none;">Reset Game</button>
+        <button onclick="openPokemonSelector()" id="select-btn">Select Team</button>
+    </div>
+
+    <div class="log" id="log">
+        <h3>Battle Log</h3>
+    </div>
+
+    <!-- Pokemon Selection Modal -->
+    <div id="pokemon-selector" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; text-align: center;">
+        <h2>Select 3 Pokemon for Your Team</h2>
+        <div id="pokemon-options" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+            <!-- Pokemon options will be dynamically inserted here -->
+        </div>
+        <button onclick="confirmSelection()">Confirm Selection</button>
+        <button onclick="closePokemonSelector()">Cancel</button>
+    </div>
+
+    <div class="gacha-page" id="gacha-page">
+        <h2>Spin the Gacha to Choose Your Pokeball!</h2>
+        <div class="gacha">
+            <div class="wheel-container">
+                <div class="wheel" id="wheel">
+                    <img src="https://static.wikia.nocookie.net/pokemon/images/e/ee/Master_Ball.png/revision/latest?cb=20241007214947" alt="Master Ball">
+                    <img src="https://static.wikia.nocookie.net/pokemon/images/3/34/Ultra_Ball.png/revision/latest?cb=20240730031101" alt="Ultra Ball">
+                    <img src="https://static.wikia.nocookie.net/pokemon/images/4/45/Great_Ball.png/revision/latest?cb=20240611003335" alt="Great Ball">
+                    <img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">
+                </div>
+            </div>
+            <button class="gacha-button" onclick="stopGacha()">Stop Wheel</button>
+            <div id="pokemon-preview" style="display: none; margin-top: 20px;">
+                <h3>Pokémon to Catch</h3>
+                <img id="pokemon-preview-img" src="" alt="Pokémon" style="width: 150px; height: 150px;">
+                <p id="pokemon-preview-name"></p>
+            </div>
+            <div id="catch-animation" class="catch-animation">
+                <img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="catch-animation" id="catch-animation" style="display: none;">
+        <h3>Attempting to Catch...</h3>
+        <img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">
+    </div>
+
+    <script>
+        const pokemonOptions = [
+            { name: "Pikachu", hp: 35, attack: 55, defense: 30, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" },
+            { name: "Mewtwo", hp: 100, attack: 110, defense: 140, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" },
+            { name: "Machamp", hp: 90, attack: 80, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" }
+        ];
+
+        const teamRocketPokemonPool = [
+            { name: "Shadow Machop", hp: 50, attack: 40, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/66.png" },
+            { name: "Shadow Charmander", hp: 39, attack: 52, defense: 43, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" },
+            { name: "Shadow Meowth", hp: 40, attack: 45, defense: 25, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png" },
+            { name: "Shadow Piplup", hp: 50, attack: 40, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/393.png" },
+            { name: "Shadow Machamp", hp: 90, attack: 80, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/68.png" },
+            { name: "Shadow Wobbuffet", hp: 190, attack: 33, defense: 58, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/202.png" },
+            { name: "Shadow Weezing", hp: 65, attack: 90, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/110.png" },
+            { name: "Shadow Bulbasaur", hp: 45, attack: 49, defense: 49, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" },
+            { name: "Shadow Squirtle", hp: 44, attack: 48, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" },
+            { name: "Shadow Jigglypuff", hp: 115, attack: 45, defense: 20, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png" },
+            { name: "Shadow Zubat", hp: 40, attack: 45, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/41.png" },
+            { name: "Shadow Rattata", hp: 30, attack: 56, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/19.png" },
+            { name: "Shadow Gyarados", hp: 95, attack: 125, defense: 79, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/130.png" },
+            { name: "Shadow Snorlax", hp: 160, attack: 110, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png" },
+            { name: "Shadow Eevee", hp: 55, attack: 55, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png" },
+            { name: "Shadow Dratini", hp: 41, attack: 64, defense: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/147.png" },
+            { name: "Shadow Dragonite", hp: 91, attack: 134, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png" },
+            { name: "Shadow Mimikyu", hp: 55, attack: 90, defense: 80, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/778.png" },
+            { name: "Shadow Absol", hp: 65, attack: 130, defense: 60, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/359.png" },
+            { name: "Shadow Lucario", hp: 70, attack: 110, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/448.png" },
+            { name: "Shadow Pikachu", hp: 35, attack: 55, defense: 40, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" },
+            { name: "Shadow Raichu", hp: 60, attack: 90, defense: 55, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/26.png" },
+            { name: "Shadow Sandshrew", hp: 50, attack: 75, defense: 85, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/27.png" },
+            { name: "Shadow Sandslash", hp: 75, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/28.png" },
+            { name: "Shadow Nidoran♀", hp: 55, attack: 47, defense: 52, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/29.png" },
+            { name: "Shadow Nidoran♂", hp: 46, attack: 57, defense: 40, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/32.png" },
+            { name: "Shadow Nidorina", hp: 70, attack: 62, defense: 67, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/30.png" },
+            { name: "Shadow Nidorino", hp: 61, attack: 72, defense: 57, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/33.png" },
+            { name: "Shadow Nidoking", hp: 81, attack: 102, defense: 77, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/34.png" },
+            { name: "Shadow Clefairy", hp: 70, attack: 45, defense: 48, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/35.png" },
+            { name: "Shadow Clefable", hp: 95, attack: 70, defense: 73, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/36.png" },
+            { name: "Shadow Vulpix", hp: 38, attack: 41, defense: 40, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/37.png" },
+            { name: "Shadow Ninetales", hp: 73, attack: 76, defense: 75, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/38.png" },
+            { name: "Shadow Oddish", hp: 45, attack: 50, defense: 55, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/43.png" },
+            { name: "Shadow Gloom", hp: 60, attack: 65, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/44.png" },
+            { name: "Shadow Vileplume", hp: 75, attack: 80, defense: 85, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/45.png" },
+            { name: "Shadow Diglett", hp: 10, attack: 55, defense: 25, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/50.png" },
+            { name: "Shadow Dugtrio", hp: 35, attack: 100, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/51.png" },
+            { name: "Shadow Psyduck", hp: 50, attack: 52, defense: 48, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/54.png" },
+            { name: "Shadow Golduck", hp: 80, attack: 82, defense: 78, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/55.png" },
+            { name: "Shadow Mankey", hp: 40, attack: 80, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/56.png" },
+            { name: "Shadow Primeape", hp: 65, attack: 105, defense: 60, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/57.png" },
+            { name: "Shadow Growlithe", hp: 55, attack: 70, defense: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/58.png" },
+            { name: "Shadow Arcanine", hp: 90, attack: 110, defense: 80, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/59.png" },
+            { name: "Shadow Poliwag", hp: 40, attack: 50, defense: 40, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/60.png" },
+            { name: "Shadow Poliwhirl", hp: 65, attack: 65, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/61.png" },
+            { name: "Shadow Poliwrath", hp: 90, attack: 85, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/62.png" },
+            { name: "Shadow Bellsprout", hp: 50, attack: 75, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/69.png" },
+            { name: "Shadow Weepinbell", hp: 65, attack: 90, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/70.png" },
+            { name: "Shadow Victreebel", hp: 80, attack: 105, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/71.png" },
+            { name: "Shadow Tentacool", hp: 40, attack: 40, defense: 35, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/72.png" },
+            { name: "Shadow Tentacruel", hp: 80, attack: 70, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/73.png" },
+            { name: "Shadow Geodude", hp: 40, attack: 80, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/74.png" },
+            { name: "Shadow Graveler", hp: 55, attack: 95, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/75.png" },
+            { name: "Shadow Golem", hp: 80, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/76.png" },
+            { name: "Shadow Ponyta", hp: 50, attack: 85, defense: 55, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/77.png" },
+            { name: "Shadow Rapidash", hp: 65, attack: 100, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/78.png" },
+            { name: "Shadow Slowpoke", hp: 90, attack: 65, defense: 65, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/79.png" },
+            { name: "Shadow Slowbro", hp: 95, attack: 75, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/80.png" },
+            { name: "Shadow Magnemite", hp: 25, attack: 35, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/81.png" },
+            { name: "Shadow Magneton", hp: 50, attack: 60, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/82.png" },
+            { name: "Shadow Farfetch'd", hp: 52, attack: 90, defense: 55, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/83.png" },
+            { name: "Shadow Doduo", hp: 35, attack: 85, defense: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/84.png" },
+            { name: "Shadow Dodrio", hp: 60, attack: 110, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/85.png" },
+            { name: "Shadow Seel", hp: 65, attack: 45, defense: 55, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/86.png" },
+            { name: "Shadow Dewgong", hp: 90, attack: 70, defense: 80, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/87.png" },
+            { name: "Shadow Grimer", hp: 80, attack: 80, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/88.png" },
+            { name: "Shadow Muk", hp: 105, attack: 105, defense: 75, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/89.png" },
+            { name: "Shadow Shellder", hp: 30, attack: 65, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/90.png" },
+            { name: "Shadow Cloyster", hp: 50, attack: 95, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/91.png" },
+            { name: "Shadow Gastly", hp: 30, attack: 35, defense: 30, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/92.png" },
+            { name: "Shadow Haunter", hp: 45, attack: 50, defense: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/93.png" },
+            { name: "Shadow Gengar", hp: 60, attack: 65, defense: 60, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png" },
+            { name: "Shadow Onix", hp: 35, attack: 45, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/95.png" },
+            { name: "Shadow Drowzee", hp: 60, attack: 48, defense: 45, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/96.png" },
+            { name: "Shadow Hypno", hp: 85, attack: 73, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/97.png" },
+            { name: "Shadow Krabby", hp: 30, attack: 105, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/98.png" },
+            { name: "Shadow Kingler", hp: 55, attack: 130, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/99.png" },
+            { name: "Shadow Voltorb", hp: 40, attack: 30, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/100.png" },
+            { name: "Shadow Electrode", hp: 60, attack: 50, defense: 70, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/101.png" },
+            { name: "Shadow Exeggcute", hp: 60, attack: 40, defense: 80, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/102.png" },
+            { name: "Shadow Exeggutor", hp: 95, attack: 95, defense: 85, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/103.png"},
+            { name: "Shadow Mewtwo", hp: 106, attack: 110, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png" },
+            { name: "Shadow Mew", hp: 100, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png" },
+            { name: "Shadow Zapdos", hp: 90, attack: 90, defense: 85, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/145.png" },
+            { name: "Shadow Articuno", hp: 90, attack: 85, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/144.png" },
+            { name: "Shadow Moltres", hp: 90, attack: 100, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/146.png" },
+            { name: "Shadow Lugia", hp: 106, attack: 90, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/249.png" },
+            { name: "Shadow Ho-Oh", hp: 106, attack: 130, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/250.png" },
+            { name: "Shadow Celebi", hp: 100, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/251.png" },
+            { name: "Shadow Kyogre", hp: 100, attack: 100, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/382.png" },
+            { name: "Shadow Groudon", hp: 100, attack: 150, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/383.png" },
+            { name: "Shadow Rayquaza", hp: 105, attack: 150, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/384.png" },
+            { name: "Shadow Jirachi", hp: 100, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/385.png" },
+            { name: "Shadow Deoxys", hp: 50, attack: 150, defense: 50, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/386.png" },
+            { name: "Shadow Dialga", hp: 100, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/483.png" },
+            { name: "Shadow Palkia", hp: 90, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/484.png" },
+            { name: "Shadow Giratina", hp: 150, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/487.png" },
+            { name: "Shadow Darkrai", hp: 70, attack: 90, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/491.png" },
+            { name: "Shadow Shaymin", hp: 100, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/492.png" },
+            { name: "Shadow Arceus", hp: 120, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/493.png" },
+            { name: "Shadow Victini", hp: 100, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/494.png" },
+            { name: "Shadow Reshiram", hp: 100, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/643.png" },
+            { name: "Shadow Zekrom", hp: 100, attack: 120, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/644.png" },
+            { name: "Shadow Kyurem", hp: 125, attack: 130, defense: 90, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/646.png" },
+            { name: "Shadow Xerneas", hp: 126, attack: 131, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/716.png" },
+            { name: "Shadow Yveltal", hp: 126, attack: 131, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/717.png" },
+            { name: "Shadow Zygarde", hp: 108, attack: 100, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/718.png" },
+            { name: "Shadow Hoopa", hp: 80, attack: 110, defense: 60, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/720.png" },
+            { name: "Shadow Solgaleo", hp: 137, attack: 137, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/791.png" },
+            { name: "Shadow Lunala", hp: 137, attack: 113, defense: 89, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/792.png" },
+            { name: "Shadow Necrozma", hp: 97, attack: 107, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/800.png" },
+            { name: "Shadow Zacian", hp: 92, attack: 130, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/888.png" },
+            { name: "Shadow Zamazenta", hp: 92, attack: 130, defense: 100, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/889.png" },
+            { name: "Shadow Eternatus", hp: 140, attack: 85, defense: 95, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/890.png" },
+            { name: "Shadow Calyrex", hp: 100, attack: 80, defense: 80, img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/898.png" }
+        ]
+
+
+        let playerPokemons = [...pokemonOptions];
+        let teamRocketPokemons = [];
+        let playerPokemonIndex = 0;
+        let rocketPokemonIndex = 0;
+        let isSpinning = true;
+
+        let selectedPokemon = [];
+
+        function openPokemonSelector() {
+            const selector = document.getElementById('pokemon-selector');
+            const optionsContainer = document.getElementById('pokemon-options');
+
+            optionsContainer.innerHTML = '';
+            playerPokemons.forEach((pokemon, index) => {
+                const button = document.createElement('div');
+                button.classList.add('pokemon-button');
+                button.onclick = () => togglePokemonSelection(index, button);
+
+                const img = document.createElement('img');
+                img.src = pokemon.img;
+                img.alt = pokemon.name;
+
+                const name = document.createElement('span');
+                name.textContent = pokemon.name;
+
+                button.appendChild(img);
+                button.appendChild(name);
+                optionsContainer.appendChild(button);
+            });
+
+            selector.style.display = 'block';
+        }
+
+        function closePokemonSelector() {
+            const selector = document.getElementById('pokemon-selector');
+            selector.style.display = 'none';
+        }
+
+        function togglePokemonSelection(index, button) {
+            const selected = selectedPokemon.includes(index);
+
+            if (selected) {
+                selectedPokemon = selectedPokemon.filter(i => i !== index);
+                button.classList.remove('selected');
+            } else if (selectedPokemon.length < 3) {
+                selectedPokemon.push(index);
+                button.classList.add('selected');
+            } else {
+                alert('You can only select up to 3 Pokémon.');
+            }
+
+            console.log(selectedPokemon);
+        }
+
+        function confirmSelection() {
+            if (selectedPokemon.length !== 3) {
+                alert('Please select exactly 3 Pokémon.');
+                return;
+            }
+
+            // Create a new array where selected Pokémon are at the top
+            const selectedPokemons = selectedPokemon.map(index => playerPokemons[index]);
+            const remainingPokemons = playerPokemons.filter((_, index) => !selectedPokemon.includes(index));
+            playerPokemons = [...selectedPokemons, ...remainingPokemons];
+
+            selectedPokemon = []; // Reset selection
+
+            closePokemonSelector();
+            resetGame();
+        }
+
+
+        function chooseRandomPokemonForRocket() {
+            const selected = [];
+            while (selected.length < 3) {
+                const randomIndex = Math.floor(Math.random() * teamRocketPokemonPool.length);
+                const chosenPokemon = teamRocketPokemonPool[randomIndex];
+
+                if (!selected.includes(chosenPokemon)) {
+                    selected.push({ ...chosenPokemon });
+                }
+            }
+            return selected;
+        }
+
+        function updatePokeballs(trainer, remaining) {
+            const pokeballsDiv = document.getElementById(`${trainer}-pokeballs`);
+            pokeballsDiv.innerHTML = "";
+            for (let i = 0; i < remaining; i++) {
+                pokeballsDiv.innerHTML += '<img src="https://pngimg.com/uploads/pokeball/pokeball_PNG7.png" alt="Pokeball">';
+            }
+        }
+
+        function showGachaPage() {
+            const gachaPage = document.getElementById('gacha-page');
+            const preview = document.getElementById('pokemon-preview');
+            const previewImg = document.getElementById('pokemon-preview-img');
+            const previewName = document.getElementById('pokemon-preview-name');
+            const catchAnimation = document.getElementById('catch-animation');
+
+            // Hide the catch animation div by default
+            catchAnimation.style.display = 'none';
+
+            // Randomly select a Pokémon from Team Rocket's pool
+            const rocketPokemon = teamRocketPokemons[Math.floor(Math.random() * teamRocketPokemons.length)];
+
+            // Update the Pokémon preview
+            previewImg.src = rocketPokemon.img;
+            previewImg.alt = rocketPokemon.name;
+            previewName.textContent = rocketPokemon.name;
+            preview.style.display = 'block'; // Show the preview
+
+            // Store the selected Pokémon for the catch attempt
+            gachaPage.selectedRocketPokemon = rocketPokemon;
+
+            // Show the Gacha page
+            gachaPage.style.display = 'block';
+        }
+
+        function stopGacha() {
+            if (!isSpinning) return;
+
+            const wheel = document.getElementById('wheel');
+            wheel.style.animationPlayState = 'paused';
+
+            const computedStyle = window.getComputedStyle(wheel);
+            const matrix = computedStyle.transform;
+
+            let angle = 0;
+            if (matrix !== 'none') {
+                const values = matrix.split('(')[1].split(')')[0].split(',');
+                const a = parseFloat(values[0]);
+                const b = parseFloat(values[1]);
+                angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+            }
+            angle = (angle < 0) ? angle + 360 : angle;
+            wheel.style.transform = `rotate(${angle}deg)`;
+
+            const ballOptions = [
+                { name: "Pokeball", img: "https://pngimg.com/uploads/pokeball/pokeball_PNG7.png", catchRate: 0.5 },
+                { name: "Great Ball", img: "https://static.wikia.nocookie.net/pokemon/images/4/45/Great_Ball.png/revision/latest?cb=20240611003335", catchRate: 0.7 },
+                { name: "Ultra Ball", img: "https://static.wikia.nocookie.net/pokemon/images/3/34/Ultra_Ball.png/revision/latest?cb=20240730031101", catchRate: 0.8 },
+                { name: "Master Ball", img: "https://static.wikia.nocookie.net/pokemon/images/e/ee/Master_Ball.png/revision/latest?cb=20241007214947", catchRate: 1.0 }
+            ];
+
+            const segmentSize = 360 / ballOptions.length;
+            const adjustedAngle = (angle + segmentSize / 2) % 360;
+            const selectedBallIndex = Math.floor(adjustedAngle / segmentSize);
+            const selectedBall = ballOptions[selectedBallIndex];
+            const catchChance = selectedBall.catchRate;
+
+            isSpinning = false;
+
+            const gachaPage = document.getElementById('gacha-page');
+            const selectedRocketPokemon = gachaPage.selectedRocketPokemon;
+
+            resetCatchAnimation();
+
+            setTimeout(() => {
+                const catchAnimation = document.getElementById('catch-animation');
+                const ballImage = catchAnimation.querySelector('img');
+
+                // Update the ball image according to the selected ball
+                ballImage.src = selectedBall.img;
+
+                // Show catch animation
+                catchAnimation.style.display = 'flex';
+
+                // Trigger the ball roll animation
+                catchAnimation.classList.remove('animate');
+                void catchAnimation.offsetWidth; // Trigger reflow to restart animation
+                catchAnimation.classList.add('animate');
+
+                // Roll animation duration: 2.1 seconds (0.7 seconds x 3 iterations)
+                const rollAnimationDuration = 700 * 3;
+
+                setTimeout(() => {
+                    const success = Math.random() < catchChance;
+
+                    // Apply animations based on success or escape
+                    if (success) {
+                        ballImage.classList.add('catch-success');
+                    } else {
+                        ballImage.classList.add('breakout');
+                    }
+
+                    // Wait for the animation to complete before showing the alert
+                    const animationDuration = success ? 1500 : 800;
+
+                    setTimeout(() => {
+                        if (success) {
+                            alert(`${selectedRocketPokemon.name} was caught with a ${selectedBall.name}! Adding it to your team.`);
+                            playerPokemons.push({ ...selectedRocketPokemon });
+                        } else {
+                            alert(`${selectedRocketPokemon.name} escaped! Try again in the next round.`);
+                        }
+
+                        // Close the Gacha page and reset the game state
+                        gachaPage.style.display = 'none';
+                        resetWheel();
+                        prepareNextRound();
+                    }, animationDuration); // Show alert after animation
+                }, rollAnimationDuration); // Start success/breakout animation after roll animation
+            }, 500); // Delay for wheel stop effect
+        }
+
+        function resetCatchAnimation() {
+            const catchAnimation = document.getElementById('catch-animation');
+            catchAnimation.style.display = 'none'; // Hide animation container
+            catchAnimation.classList.remove('animate'); // Remove any previous animation classes
+        }
+
+
+        function resetWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.style.animation = 'spin 1s linear infinite'; // Restart the spinning animation
+            isSpinning = true;
+        }
+
+        function prepareNextRound() {
+            rocketPokemonIndex = 0;
+            playerPokemonIndex = 0;
+            teamRocketPokemons = chooseRandomPokemonForRocket();
+            isSpinning = true;
+            loadPokemon("ash", playerPokemons[playerPokemonIndex]);
+            loadPokemon("rocket", teamRocketPokemons[rocketPokemonIndex]);
+            document.getElementById("attack-btn").disabled = false;
+            log('')
+            log('Start of New Round!')
+        }
+
+        function loadPokemon(trainer, pokemon) {
+            const nameElement = document.getElementById(`${trainer}-name`);
+            const imgElement = document.getElementById(`${trainer}-img`);
+            const hpBar = document.getElementById(`${trainer}-hp`);
+
+            if (pokemon) {
+                pokemon.currentHp = pokemon.hp;
+                nameElement.textContent = `${trainer === "ash" ? "Ash's" : "Team Rocket's"} ${pokemon.name}`;
+                imgElement.src = pokemon.img;
+                imgElement.alt = pokemon.name;
+                hpBar.textContent = `${pokemon.hp}/${pokemon.hp} HP (100%)`;
+                hpBar.style.width = "100%";
+                hpBar.style.backgroundColor = "green";
+            } else {
+                nameElement.textContent = "No Pokemon";
+                imgElement.src = "";
+                imgElement.alt = "No Pokemon";
+                hpBar.textContent = "HP";
+                hpBar.style.width = "0%";
+                hpBar.style.backgroundColor = "transparent";
+            }
+        }
+
+        function playerAttack() {
+            const playerPokemon = playerPokemons[playerPokemonIndex];
+            const rocketPokemon = teamRocketPokemons[rocketPokemonIndex];
+
+            if (!playerPokemon || !rocketPokemon) return;
+
+            // Player attack
+            const damage = Math.max(playerPokemon.attack - rocketPokemon.defense, 1);
+            rocketPokemon.currentHp -= damage;
+
+            log(`Ash's ${playerPokemon.name} dealt ${damage} damage to Team Rocket's ${rocketPokemon.name}.`);
+            updateHP("rocket", rocketPokemon);
+
+            if (rocketPokemon.currentHp <= 0) {
+                log(`Team Rocket's ${rocketPokemon.name} fainted!`);
+                rocketPokemonIndex++;
+                if (rocketPokemonIndex >= teamRocketPokemons.length) {
+                    log("Ash wins! All Team Rocket Pokémon fainted.");
+                    showGachaPage();
+                    return;
+                }
+                loadPokemon("rocket", teamRocketPokemons[rocketPokemonIndex]);
+                return;
+            }
+
+            // Team Rocket attack
+            setTimeout(() => {
+                const rocketDamage = Math.max(rocketPokemon.attack - playerPokemon.defense, 1);
+                playerPokemon.currentHp -= rocketDamage;
+
+                log(`Team Rocket's ${rocketPokemon.name} dealt ${rocketDamage} damage to Ash's ${playerPokemon.name}.`);
+                updateHP("ash", playerPokemon);
+
+                if (playerPokemon.currentHp <= 0) {
+                    log(`Ash's ${playerPokemon.name} fainted!`);
+                    playerPokemonIndex++;
+                    if (playerPokemonIndex >= 3) {
+                        log("Team Rocket wins! All Ash's Pokémon fainted.");
+                        document.getElementById("attack-btn").disabled = true;
+                        return;
+                    }
+                    loadPokemon("ash", playerPokemons[playerPokemonIndex]);
+                }
+            }, 10);
+        }
+
+        function updateHP(trainer, pokemon) {
+            const hpBar = document.getElementById(`${trainer}-hp`);
+            const maxHP = pokemon.hp;
+            const currentHP = Math.max(0, pokemon.currentHp);
+            const hpPercent = (currentHP / maxHP) * 100;
+
+            let color = "green";
+            if (hpPercent < 50 && hpPercent >= 20) {
+                color = "orange";
+            } else if (hpPercent < 20) {
+                color = "red";
+            }
+
+            hpBar.style.width = `${hpPercent}%`;
+            hpBar.style.backgroundColor = color;
+            hpBar.textContent = `${currentHP}/${maxHP} HP (${Math.round(hpPercent)}%)`;
+        }
+
+        function log(message) {
+            const logDiv = document.getElementById("log");
+            const logItems = logDiv.getElementsByTagName("p");
+
+            if (logItems.length >= 2) {
+                logDiv.removeChild(logItems[0]);
+            }
+
+            const p = document.createElement("p");
+            p.textContent = message;
+            logDiv.appendChild(p);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function resetGame() {
+            playerPokemons.forEach(pokemon => pokemon.currentHp = pokemon.hp);
+            prepareNextRound();
+        }
+
+        // Initialize the game
+        prepareNextRound();
+    </script>
+</body>
+</html>
